@@ -10,26 +10,16 @@ import (
 
 func main() {
   rand.Seed(time.Now().Unix())
-  p1Workers := 10
-  printerWorkers := 2
+  p1Workers := 26
+  printerWorkers := 10
   startTime := time.Now()
 
   p1Channel := make(chan int)
   printerChannel := make(chan int)
   wg := sync.WaitGroup{}
 
-  // start up p1 workers
   startP1Workers(p1Workers, p1Channel, printerChannel)
-
-  // start up printer workers
-  for i := 0; i<printerWorkers; i++ {
-    go func() {
-      for {
-        n := <- printerChannel
-        printer(n, &wg)
-      }
-    }()
-  }
+  startPrinterWorkers(printerWorkers, printerChannel, &wg)
 
   // original input is generated and sent to 1st channel
   for i:=0; i<25; i++ {
@@ -50,6 +40,20 @@ func startP1Workers(p1Workers int,
       for {
         n := <- p1Channel
         processor1(n, printerChannel)
+      }
+    }()
+  }
+}
+
+func startPrinterWorkers(printerWorkers int,
+                         printerChannel chan int,
+                         wg *sync.WaitGroup) {
+
+  for i := 0; i<printerWorkers; i++ {
+    go func() {
+      for {
+        n := <- printerChannel
+        printer(n, wg)
       }
     }()
   }
