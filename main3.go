@@ -19,14 +19,7 @@ func main() {
   wg := sync.WaitGroup{}
 
   // start up p1 workers
-  for i := 0; i<p1Workers; i++ {
-    go func() {
-      for {
-        n := <- p1Channel
-        processor1(n, printerChannel)
-      }
-    }()
-  }
+  startP1Workers(p1Workers, p1Channel, printerChannel)
 
   // start up printer workers
   for i := 0; i<printerWorkers; i++ {
@@ -48,6 +41,20 @@ func main() {
   fmt.Printf("elapsed time: %v\n", time.Since(startTime))
 }
 
+func startP1Workers(p1Workers int,
+                    p1Channel chan int,
+                    printerChannel chan<- int) {
+
+  for i := 0; i<p1Workers; i++ {
+    go func() {
+      for {
+        n := <- p1Channel
+        processor1(n, printerChannel)
+      }
+    }()
+  }
+}
+
 func processor1(n int, printerChannel chan<- int) {
   sleepMilliseconds := rand.Intn(2000)
   time.Sleep(time.Duration(sleepMilliseconds) * time.Millisecond)
@@ -59,6 +66,5 @@ func printer(n int, wg *sync.WaitGroup) {
   fmt.Println(n)
   wg.Done()
 }
-
 
 
