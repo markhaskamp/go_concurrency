@@ -10,8 +10,8 @@ import (
 
 func main() {
   rand.Seed(time.Now().Unix())
-  p1Workers := 26
-  printerWorkers := 10
+  p1Workers := 5
+  printerWorkers := 5
   startTime := time.Now()
 
   p1Channel := make(chan int)
@@ -67,7 +67,7 @@ func processor1(n int, printerChannel chan<- int) {
 }
 
 func printer(n int, wg *sync.WaitGroup) {
-  fmt.Println(n)
+  fmt.Printf("%d ", n)
   wg.Done()
 }
 
