@@ -10,34 +10,53 @@ import (
 
 func main() {
   rand.Seed(time.Now().Unix())
-  concurrentWorkers := 5
+  p1Workers := 10
+  printerWorkers := 2
   startTime := time.Now()
 
-  c := make(chan int)
+  p1Channel := make(chan int)
+  printerChannel := make(chan int)
   wg := sync.WaitGroup{}
 
-  for i := 0; i<concurrentWorkers; i++ {
+  // start up p1 workers
+  for i := 0; i<p1Workers; i++ {
     go func() {
       for {
-        n := <- c
+        n := <- p1Channel
+        processor1(n, printerChannel)
+      }
+    }()
+  }
+
+  // start up printer workers
+  for i := 0; i<printerWorkers; i++ {
+    go func() {
+      for {
+        n := <- printerChannel
         printer(n, &wg)
       }
     }()
   }
 
+  // original input is generated and sent to 1st channel
   for i:=0; i<25; i++ {
     wg.Add(1)
-    c <- i
+    p1Channel <- i
   }
 
   wg.Wait()
   fmt.Printf("elapsed time: %v\n", time.Since(startTime))
 }
 
-func printer(n int, wg *sync.WaitGroup) {
+func processor1(n int, printerChannel chan<- int) {
   sleepMilliseconds := rand.Intn(2000)
   time.Sleep(time.Duration(sleepMilliseconds) * time.Millisecond)
-  fmt.Printf("%v \t%d\n", sleepMilliseconds, n)   
+
+  printerChannel <- n
+}
+
+func printer(n int, wg *sync.WaitGroup) {
+  fmt.Println(n)
   wg.Done()
 }
 
